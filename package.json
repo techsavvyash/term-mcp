@@ -1,0 +1,51 @@
+{
+  "name": "term-mcp",
+  "version": "0.1.0",
+  "description": "Puppeteer for terminals - programmatic terminal control for AI agents",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "bin": {
+    "term-mcp": "./dist/server.js"
+  },
+  "scripts": {
+    "dev": "npx tsx src/server.ts",
+    "build": "tsup",
+    "start": "node dist/server.js",
+    "test": "vitest",
+    "typecheck": "tsc --noEmit"
+  },
+  "keywords": [
+    "terminal",
+    "pty",
+    "mcp",
+    "automation",
+    "testing",
+    "puppeteer",
+    "cli"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.0",
+    "nanoid": "^5.0.9",
+    "node-pty": "^1.0.0",
+    "zod": "^3.24.2"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "tsup": "^8.3.5",
+    "tsx": "^4.19.0",
+    "typescript": "^5.7.2",
+    "vitest": "^2.1.8"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
