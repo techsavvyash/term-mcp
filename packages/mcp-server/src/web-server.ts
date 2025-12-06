@@ -5,8 +5,8 @@
  * Supports both Node.js and Bun runtimes.
  */
 
-import { GhosttyManager } from "./ghostty-manager";
-import type { WebServerConfig, GhosttySpawnOptions } from "./types";
+import { GhosttyManager } from "@termwright/core";
+import type { WebServerConfig, GhosttySpawnOptions } from "@termwright/core";
 import { readFileSync } from "fs";
 import { join, dirname } from "path";
 import { fileURLToPath } from "url";

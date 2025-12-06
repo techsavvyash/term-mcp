@@ -1,58 +1,20 @@
 {
-  "name": "termwright",
+  "name": "termwright-monorepo",
   "version": "0.0.1",
+  "private": true,
   "description": "Playwright for terminals - programmatic terminal control for AI agents",
-  "type": "module",
-  "main": "./dist/index.js",
-  "types": "./dist/index.d.ts",
-  "exports": {
-    ".": {
-      "import": "./dist/index.js",
-      "types": "./dist/index.d.ts"
-    }
-  },
-  "bin": {
-    "termwright": "./dist/server.js",
-    "termwright-web": "./dist/web-server.js"
-  },
-  "scripts": {
-    "dev": "npx tsx src/server.ts",
-    "dev:web": "npx tsx src/web-server.ts",
-    "build": "bun build src/index.ts src/server.ts src/web-server.ts --outdir dist --target node --format esm --packages external && tsc --emitDeclarationOnly --outDir dist",
-    "start": "node dist/server.js",
-    "start:web": "node dist/web-server.js",
-    "test": "vitest run",
-    "test:watch": "vitest",
-    "test:unit": "vitest run src/output-buffer.test.ts",
-    "typecheck": "tsc --noEmit"
-  },
-  "keywords": [
-    "terminal",
-    "pty",
-    "mcp",
-    "automation",
-    "testing",
-    "playwright",
-    "cli",
-    "ghostty",
-    "libghostty"
+  "workspaces": [
+    "packages/*"
   ],
-  "author": "",
-  "license": "MIT",
-  "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.0.0",
-    "ghostty-web": "^0.3.0",
-    "nanoid": "^5.0.9",
-    "node-pty": "^1.0.0",
-    "ws": "^8.18.3",
-    "zod": "^3.24.2"
+  "scripts": {
+    "build": "bun run --filter '*' build",
+    "test": "bun run --filter '*' test",
+    "typecheck": "bun run --filter '*' typecheck",
+    "dev": "bun run --filter @termwright/mcp-server dev",
+    "dev:web": "bun run --filter @termwright/mcp-server dev:web"
   },
   "devDependencies": {
-    "@types/node": "^22.10.0",
-    "@types/ws": "^8.18.1",
-    "tsx": "^4.19.0",
-    "typescript": "^5.7.2",
-    "vitest": "^4.0.15"
+    "typescript": "^5.7.2"
   },
   "engines": {
     "node": ">=18",

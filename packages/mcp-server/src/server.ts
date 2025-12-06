@@ -5,9 +5,8 @@ import {
   ListToolsRequestSchema,
 } from "@modelcontextprotocol/sdk/types.js";
 import { z } from "zod";
-import { TerminalManager } from "./terminal-manager";
-import { GhosttyManager } from "./ghostty-manager";
-import type { GhosttyBackend, WebServerConfig } from "./types";
+import { TerminalManager, GhosttyManager } from "@termwright/core";
+import type { GhosttyBackend, WebServerConfig } from "@termwright/core";
 
 // Web server instance (started on demand via dynamic import)
 // Requires Bun runtime - will fail gracefully if Bun is not available

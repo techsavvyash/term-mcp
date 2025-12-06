@@ -1,0 +1,43 @@
+{
+  "name": "@termwright/core",
+  "version": "0.0.1",
+  "description": "Playwright for terminals - core library for programmatic terminal control",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "scripts": {
+    "build": "tsc",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit"
+  },
+  "keywords": [
+    "terminal",
+    "pty",
+    "automation",
+    "testing",
+    "playwright",
+    "cli",
+    "ghostty"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "nanoid": "^5.0.9",
+    "node-pty": "^1.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "typescript": "^5.7.2",
+    "vitest": "^4.0.15"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

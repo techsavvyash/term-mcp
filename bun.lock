@@ -2,12 +2,35 @@
   "lockfileVersion": 1,
   "workspaces": {
     "": {
-      "name": "term-mcp",
+      "name": "termwright-monorepo",
+      "devDependencies": {
+        "typescript": "^5.7.2",
+      },
+    },
+    "packages/core": {
+      "name": "@termwright/core",
+      "version": "0.0.1",
       "dependencies": {
-        "@modelcontextprotocol/sdk": "^1.0.0",
-        "ghostty-web": "^0.3.0",
         "nanoid": "^5.0.9",
         "node-pty": "^1.0.0",
+      },
+      "devDependencies": {
+        "@types/node": "^22.10.0",
+        "typescript": "^5.7.2",
+        "vitest": "^4.0.15",
+      },
+    },
+    "packages/mcp-server": {
+      "name": "@termwright/mcp-server",
+      "version": "0.0.1",
+      "bin": {
+        "termwright": "./dist/server.js",
+        "termwright-web": "./dist/web-server.js",
+      },
+      "dependencies": {
+        "@modelcontextprotocol/sdk": "^1.0.0",
+        "@termwright/core": "workspace:*",
+        "ghostty-web": "^0.3.0",
         "ws": "^8.18.3",
         "zod": "^3.24.2",
       },
@@ -16,7 +39,6 @@
         "@types/ws": "^8.18.1",
         "tsx": "^4.19.0",
         "typescript": "^5.7.2",
-        "vitest": "^4.0.15",
       },
     },
   },
@@ -122,6 +144,10 @@
     "@rollup/rollup-win32-x64-msvc": ["@rollup/rollup-win32-x64-msvc@4.53.3", "", { "os": "win32", "cpu": "x64" }, "sha512-UhTd8u31dXadv0MopwGgNOBpUVROFKWVQgAg5N1ESyCz8AuBcMqm4AuTjrwgQKGDfoFuz02EuMRHQIw/frmYKQ=="],
 
     "@standard-schema/spec": ["@standard-schema/spec@1.0.0", "", {}, "sha512-m2bOd0f2RT9k8QJx1JN85cZYyH1RqFBdlwtkSlf4tBDYLCiiZnv1fIIwacK6cqwXavOydf0NPToMQgpKq+dVlA=="],
+
+    "@termwright/core": ["@termwright/core@workspace:packages/core"],
+
+    "@termwright/mcp-server": ["@termwright/mcp-server@workspace:packages/mcp-server"],
 
     "@types/chai": ["@types/chai@5.2.3", "", { "dependencies": { "@types/deep-eql": "*", "assertion-error": "^2.0.1" } }, "sha512-Mw558oeA9fFbv65/y4mHtXDs9bPnFMZAL/jxdPFUpOHHIXX91mcgEHbS5Lahr+pwZFR8A7GQleRWeI6cGFC2UA=="],
 
