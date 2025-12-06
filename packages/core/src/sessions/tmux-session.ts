@@ -1,12 +1,12 @@
 import { execSync, spawn, ChildProcess } from "child_process";
-import { OutputBuffer } from "../utils/output-buffer";
+import { OutputBuffer } from "../utils/output-buffer.js";
 import type {
   SpawnOptions,
   SessionInfo,
   WaitOptions,
   ReadOptions,
   RunCommandResult,
-} from "../types";
+} from "../types/index.js";
 
 /**
  * Supported terminal emulators in order of preference.

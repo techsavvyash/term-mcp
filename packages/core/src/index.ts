@@ -1,12 +1,12 @@
 // Core exports (PTY-based terminal sessions)
-export { TerminalManager } from "./managers/terminal-manager";
-export { TerminalSession } from "./sessions/session";
-export { TmuxSession } from "./sessions/tmux-session";
-export { OutputBuffer } from "./utils/output-buffer";
+export { TerminalManager } from "./managers/terminal-manager.js";
+export { TerminalSession } from "./sessions/session.js";
+export { TmuxSession } from "./sessions/tmux-session.js";
+export { OutputBuffer } from "./utils/output-buffer.js";
 
 // Ghostty exports (libghostty-based terminal sessions)
-export { GhosttyManager } from "./managers/ghostty-manager";
-export { GhosttySession } from "./sessions/ghostty-session";
+export { GhosttyManager } from "./managers/ghostty-manager.js";
+export { GhosttySession } from "./sessions/ghostty-session.js";
 
 // Type exports
 export type {
@@ -21,4 +21,4 @@ export type {
   GhosttyTheme,
   GhosttySessionInfo,
   WebServerConfig,
-} from "./types";
+} from "./types/index.js";

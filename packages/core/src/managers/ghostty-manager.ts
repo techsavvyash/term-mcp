@@ -1,6 +1,6 @@
 import { nanoid } from "nanoid";
-import { GhosttySession } from "../sessions/ghostty-session";
-import type { GhosttySpawnOptions, GhosttySessionInfo } from "../types";
+import { GhosttySession } from "../sessions/ghostty-session.js";
+import type { GhosttySpawnOptions, GhosttySessionInfo } from "../types/index.js";
 
 /**
  * GhosttyManager is a singleton that manages all Ghostty terminal sessions.

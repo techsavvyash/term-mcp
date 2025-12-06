@@ -1,12 +1,12 @@
 import * as pty from "node-pty";
-import { OutputBuffer } from "../utils/output-buffer";
+import { OutputBuffer } from "../utils/output-buffer.js";
 import type {
   SpawnOptions,
   SessionInfo,
   WaitOptions,
   ReadOptions,
   RunCommandResult,
-} from "../types";
+} from "../types/index.js";
 
 /**
  * TerminalSession wraps a pseudo-terminal (PTY) and provides

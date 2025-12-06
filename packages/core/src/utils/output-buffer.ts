@@ -1,4 +1,4 @@
-import type { WaitOptions, ReadOptions } from "../types";
+import type { WaitOptions, ReadOptions } from "../types/index.js";
 
 /**
  * OutputBuffer manages terminal output with pattern matching and waiting capabilities.
