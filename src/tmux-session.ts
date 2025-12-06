@@ -9,10 +9,60 @@ import type {
 } from "./types";
 
 /**
+ * Supported terminal emulators in order of preference.
+ */
+const TERMINAL_EMULATORS = [
+  {
+    name: "kitty",
+    command: (session: string) => ["kitty", "-e", "tmux", "attach", "-t", session],
+  },
+  {
+    name: "alacritty",
+    command: (session: string) => ["alacritty", "-e", "tmux", "attach", "-t", session],
+  },
+  {
+    name: "wezterm",
+    command: (session: string) => ["wezterm", "start", "--", "tmux", "attach", "-t", session],
+  },
+  {
+    name: "foot",
+    command: (session: string) => ["foot", "tmux", "attach", "-t", session],
+  },
+  {
+    name: "gnome-terminal",
+    command: (session: string) => ["gnome-terminal", "--", "tmux", "attach", "-t", session],
+  },
+  {
+    name: "konsole",
+    command: (session: string) => ["konsole", "-e", "tmux", "attach", "-t", session],
+  },
+  {
+    name: "xterm",
+    command: (session: string) => ["xterm", "-e", "tmux", "attach", "-t", session],
+  },
+];
+
+/**
+ * Detect available terminal emulator.
+ */
+function detectTerminalEmulator(): typeof TERMINAL_EMULATORS[0] | null {
+  for (const term of TERMINAL_EMULATORS) {
+    try {
+      execSync(`which ${term.name}`, { stdio: "ignore" });
+      return term;
+    } catch {
+      // Not found, try next
+    }
+  }
+  return null;
+}
+
+/**
  * TmuxSession creates a real tmux session that can be attached to
  * from any terminal window, providing a visible controlled terminal.
  *
- * Users can attach with: tmux attach -t <sessionName>
+ * When spawnWindow is true, it also spawns a terminal emulator window
+ * attached to the session - like Puppeteer spawning a browser.
  */
 export class TmuxSession {
   readonly id: string;
@@ -24,8 +74,10 @@ export class TmuxSession {
   private _alive: boolean = true;
   private pollInterval: NodeJS.Timeout | null = null;
   private lastOutputLength: number = 0;
+  private terminalProcess: ChildProcess | null = null;
+  private _terminalEmulator: string | null = null;
 
-  constructor(id: string, options: SpawnOptions = {}) {
+  constructor(id: string, options: SpawnOptions = {}, spawnWindow: boolean = false) {
     this.id = id;
     this.tmuxSessionName = `term-mcp-${id}`;
     this.createdAt = new Date();
@@ -70,6 +122,11 @@ export class TmuxSession {
         }
       }
 
+      // Spawn terminal window if requested
+      if (spawnWindow) {
+        this.spawnTerminalWindow();
+      }
+
       // Start polling for output
       this.startOutputPolling();
 
@@ -77,6 +134,44 @@ export class TmuxSession {
       this._alive = false;
       throw new Error(`Failed to create tmux session: ${error}`);
     }
+  }
+
+  /**
+   * Spawn a terminal emulator window attached to this tmux session.
+   */
+  private spawnTerminalWindow(): void {
+    const terminal = detectTerminalEmulator();
+    if (!terminal) {
+      throw new Error(
+        "No supported terminal emulator found. Please install one of: " +
+        TERMINAL_EMULATORS.map(t => t.name).join(", ")
+      );
+    }
+
+    this._terminalEmulator = terminal.name;
+    const args = terminal.command(this.tmuxSessionName);
+    const [cmd, ...cmdArgs] = args;
+
+    // Spawn the terminal emulator as a detached process
+    this.terminalProcess = spawn(cmd, cmdArgs, {
+      detached: true,
+      stdio: "ignore",
+    });
+
+    // Don't let the terminal process keep the parent alive
+    this.terminalProcess.unref();
+
+    // Track if terminal window is closed
+    this.terminalProcess.on("exit", () => {
+      this.terminalProcess = null;
+    });
+  }
+
+  /**
+   * Get the terminal emulator being used.
+   */
+  get terminalEmulator(): string | null {
+    return this._terminalEmulator;
   }
 
   /**
