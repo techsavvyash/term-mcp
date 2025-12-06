@@ -1,17 +1,12 @@
-// Core exports (legacy PTY-based)
-export { TerminalManager } from "./terminal-manager";
-export { TerminalSession } from "./session";
-export { TmuxSession } from "./tmux-session";
-export { OutputBuffer } from "./output-buffer";
+// Core exports (PTY-based terminal sessions)
+export { TerminalManager } from "./managers/terminal-manager";
+export { TerminalSession } from "./sessions/session";
+export { TmuxSession } from "./sessions/tmux-session";
+export { OutputBuffer } from "./utils/output-buffer";
 
-// Ghostty exports (new libghostty-based)
-export { GhosttyManager } from "./ghostty-manager";
-export { GhosttySession } from "./ghostty-session";
-
-// Note: TermwrightWebServer requires Bun runtime and is available via:
-// - Direct run: bun run src/web-server.ts
-// - Compiled: bun dist/web-server.js
-// - Import (in Bun only): import { TermwrightWebServer } from "termwright/dist/web-server"
+// Ghostty exports (libghostty-based terminal sessions)
+export { GhosttyManager } from "./managers/ghostty-manager";
+export { GhosttySession } from "./sessions/ghostty-session";
 
 // Type exports
 export type {

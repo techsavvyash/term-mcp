@@ -1,4 +1,4 @@
-import type { WaitOptions, ReadOptions } from "./types";
+import type { WaitOptions, ReadOptions } from "../types";
 
 /**
  * OutputBuffer manages terminal output with pattern matching and waiting capabilities.

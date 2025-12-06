@@ -1,6 +1,6 @@
 import * as pty from "node-pty";
 import { spawn, type ChildProcess } from "child_process";
-import { OutputBuffer } from "./output-buffer";
+import { OutputBuffer } from "../utils/output-buffer";
 import type {
   GhosttySpawnOptions,
   GhosttySessionInfo,
@@ -9,7 +9,7 @@ import type {
   WaitOptions,
   ReadOptions,
   RunCommandResult,
-} from "./types";
+} from "../types";
 
 const DEFAULT_THEME: GhosttyTheme = {
   background: "#1a1b26",

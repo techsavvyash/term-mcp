@@ -1,7 +1,7 @@
 import { nanoid } from "nanoid";
-import { TerminalSession } from "./session";
-import { TmuxSession } from "./tmux-session";
-import type { SpawnOptions, SessionInfo, WaitOptions, ReadOptions, RunCommandResult } from "./types";
+import { TerminalSession } from "../sessions/session";
+import { TmuxSession } from "../sessions/tmux-session";
+import type { SpawnOptions, SessionInfo, WaitOptions, ReadOptions, RunCommandResult } from "../types";
 
 /**
  * Common interface for both PTY and Tmux sessions.

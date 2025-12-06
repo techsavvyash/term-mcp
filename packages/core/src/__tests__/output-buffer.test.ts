@@ -1,5 +1,5 @@
 import { describe, test, expect, beforeEach } from "vitest";
-import { OutputBuffer } from "./output-buffer";
+import { OutputBuffer } from "../utils/output-buffer";
 
 describe("OutputBuffer", () => {
   let buffer: OutputBuffer;

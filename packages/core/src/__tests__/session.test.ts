@@ -1,5 +1,5 @@
 import { describe, test, expect, afterEach } from "vitest";
-import { TerminalSession } from "./session";
+import { TerminalSession } from "../sessions/session";
 
 describe("TerminalSession", () => {
   let session: TerminalSession | null = null;

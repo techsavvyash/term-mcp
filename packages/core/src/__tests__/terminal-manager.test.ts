@@ -1,5 +1,5 @@
 import { describe, test, expect, afterEach } from "vitest";
-import { TerminalManager } from "./terminal-manager";
+import { TerminalManager } from "../managers/terminal-manager";
 
 describe("TerminalManager", () => {
   const sessions: string[] = [];
