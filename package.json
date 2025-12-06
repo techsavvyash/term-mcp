@@ -1,6 +1,6 @@
 {
   "name": "termwright",
-  "version": "0.2.0",
+  "version": "0.0.1",
   "description": "Puppeteer for terminals - programmatic terminal control for AI agents",
   "type": "module",
   "main": "./dist/index.js",
