@@ -33,6 +33,7 @@ const SpawnTerminalSchema = z.object({
   env: z.record(z.string()).optional().describe("Additional environment variables to set"),
   cols: z.number().optional().describe("Terminal columns (default: 80)"),
   rows: z.number().optional().describe("Terminal rows (default: 24)"),
+  visible: z.boolean().optional().describe("If true, creates a visible tmux session. Attach with: tmux attach -t <sessionName>"),
 });
 
 const SendInputSchema = z.object({
@@ -137,7 +138,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
       {
         name: "spawn-terminal",
         description:
-          "Spawn a new terminal session. Returns a session ID that must be used for all subsequent operations on this terminal.",
+          "Spawn a new terminal session. Returns a session ID that must be used for all subsequent operations. Set visible=true to create a tmux session you can attach to with 'tmux attach -t <name>'.",
         inputSchema: {
           type: "object",
           properties: {
@@ -150,6 +151,10 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
             },
             cols: { type: "number", description: "Terminal columns (default: 80)" },
             rows: { type: "number", description: "Terminal rows (default: 24)" },
+            visible: {
+              type: "boolean",
+              description: "If true, creates a visible tmux session. User can attach with: tmux attach -t <sessionName>"
+            },
           },
         },
       },
@@ -382,21 +387,33 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
           env: parsed.env,
           cols: parsed.cols,
           rows: parsed.rows,
+          visible: parsed.visible,
         });
 
         // Wait a moment for the shell to initialize
         await new Promise((resolve) => setTimeout(resolve, 200));
 
+        const info = session.getInfo();
+        const response: Record<string, unknown> = {
+          sessionId: session.id,
+          cwd: session.cwd,
+          visible: !!parsed.visible,
+        };
+
+        if (info.visible && info.attachCommand) {
+          response.tmuxSession = info.tmuxSession;
+          response.attachCommand = info.attachCommand;
+          response.message = `Visible terminal session created. Attach with: ${info.attachCommand}`;
+        } else {
+          response.pid = info.pid;
+          response.message = `Terminal session ${session.id} spawned successfully (headless).`;
+        }
+
         return {
           content: [
             {
               type: "text",
-              text: JSON.stringify({
-                sessionId: session.id,
-                pid: session.pid,
-                cwd: session.cwd,
-                message: `Terminal session ${session.id} spawned successfully.`,
-              }),
+              text: JSON.stringify(response),
             },
           ],
         };
@@ -538,6 +555,9 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
                   cwd: s.cwd,
                   createdAt: s.createdAt.toISOString(),
                   alive: s.alive,
+                  visible: s.visible || false,
+                  tmuxSession: s.tmuxSession,
+                  attachCommand: s.attachCommand,
                 })),
                 count: sessions.length,
               }),

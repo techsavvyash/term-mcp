@@ -9,6 +9,12 @@ export interface SpawnOptions {
   cols?: number;
   /** Terminal rows (default: 24) */
   rows?: number;
+  /**
+   * If true, creates a visible tmux session that can be attached to.
+   * Use `tmux attach -t <sessionName>` to view the terminal.
+   * Default: false (headless PTY)
+   */
+  visible?: boolean;
 }
 
 export interface SessionInfo {
@@ -22,6 +28,12 @@ export interface SessionInfo {
   cwd: string;
   /** Whether the session is still alive */
   alive: boolean;
+  /** Whether this is a visible tmux session */
+  visible?: boolean;
+  /** tmux session name (only for visible sessions) */
+  tmuxSession?: string;
+  /** Command to attach to the session (only for visible sessions) */
+  attachCommand?: string;
 }
 
 export interface WaitOptions {

@@ -1,13 +1,33 @@
 import { nanoid } from "nanoid";
 import { TerminalSession } from "./session";
-import type { SpawnOptions, SessionInfo } from "./types";
+import { TmuxSession } from "./tmux-session";
+import type { SpawnOptions, SessionInfo, WaitOptions, ReadOptions, RunCommandResult } from "./types";
+
+/**
+ * Common interface for both PTY and Tmux sessions.
+ */
+export interface ITerminalSession {
+  readonly id: string;
+  readonly createdAt: Date;
+  readonly cwd: string;
+  readonly alive: boolean;
+  getInfo(): SessionInfo;
+  write(data: string): void;
+  read(options?: ReadOptions): string;
+  clearBuffer(): void;
+  waitFor(pattern: string | RegExp, options?: WaitOptions): Promise<string>;
+  runCommand(command: string, options?: { timeout?: number; waitFor?: string | RegExp }): Promise<RunCommandResult>;
+  resize(cols: number, rows: number): void;
+  kill(): void;
+  destroy(): void;
+}
 
 /**
  * TerminalManager is a singleton that manages all terminal sessions.
  * It provides methods to create, retrieve, list, and destroy sessions.
  */
 class TerminalManagerClass {
-  private sessions: Map<string, TerminalSession> = new Map();
+  private sessions: Map<string, ITerminalSession> = new Map();
   private cleanupRegistered = false;
 
   constructor() {
@@ -43,25 +63,37 @@ class TerminalManagerClass {
 
   /**
    * Spawn a new terminal session.
+   * @param options - Spawn options. If `visible: true`, creates a tmux session
+   *                  that can be attached to with `tmux attach -t <name>`.
    */
-  spawn(options: SpawnOptions = {}): TerminalSession {
-    const id = `term-${nanoid(8)}`;
-    const session = new TerminalSession(id, options);
-    this.sessions.set(id, session);
+  spawn(options: SpawnOptions = {}): ITerminalSession {
+    const id = nanoid(8);
+
+    let session: ITerminalSession;
+
+    if (options.visible) {
+      // Create a visible tmux session
+      session = new TmuxSession(id, options);
+    } else {
+      // Create a headless PTY session
+      session = new TerminalSession(`term-${id}`, options);
+    }
+
+    this.sessions.set(session.id, session);
     return session;
   }
 
   /**
    * Get a session by ID.
    */
-  get(sessionId: string): TerminalSession | undefined {
+  get(sessionId: string): ITerminalSession | undefined {
     return this.sessions.get(sessionId);
   }
 
   /**
    * Get a session by ID, throwing if not found.
    */
-  getOrThrow(sessionId: string): TerminalSession {
+  getOrThrow(sessionId: string): ITerminalSession {
     const session = this.sessions.get(sessionId);
     if (!session) {
       throw new Error(`Session not found: ${sessionId}`);

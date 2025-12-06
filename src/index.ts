@@ -1,6 +1,7 @@
 // Core exports (legacy PTY-based)
 export { TerminalManager } from "./terminal-manager";
 export { TerminalSession } from "./session";
+export { TmuxSession } from "./tmux-session";
 export { OutputBuffer } from "./output-buffer";
 
 // Ghostty exports (new libghostty-based)
