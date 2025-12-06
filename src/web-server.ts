@@ -261,7 +261,7 @@ function getIndexHtml(host: string, port: number): string {
 <body>
   <div class="container">
     <h1>termwright</h1>
-    <p class="subtitle">Puppeteer for terminals - Web Interface with ghostty-web</p>
+    <p class="subtitle">Playwright for terminals - Web Interface with ghostty-web</p>
 
     <div class="card">
       <h2>Active Sessions</h2>

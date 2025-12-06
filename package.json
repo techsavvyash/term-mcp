@@ -1,7 +1,7 @@
 {
   "name": "termwright",
   "version": "0.0.1",
-  "description": "Puppeteer for terminals - programmatic terminal control for AI agents",
+  "description": "Playwright for terminals - programmatic terminal control for AI agents",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -32,7 +32,7 @@
     "mcp",
     "automation",
     "testing",
-    "puppeteer",
+    "playwright",
     "cli",
     "ghostty",
     "libghostty"

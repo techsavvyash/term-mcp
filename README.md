@@ -1,6 +1,6 @@
 # termwright
 
-Puppeteer for terminals. Programmatic terminal control for AI agents via MCP.
+Playwright for terminals. Programmatic terminal control for AI agents via MCP.
 
 ## What it does
 
