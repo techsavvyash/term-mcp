@@ -16,9 +16,9 @@
     "term-mcp-web": "./dist/web-server.js"
   },
   "scripts": {
-    "dev": "tsx src/server.ts",
+    "dev": "npx tsx src/server.ts",
     "dev:web": "bun run src/web-server.ts",
-    "build": "tsup",
+    "build": "bun build src/index.ts src/server.ts src/web-server.ts --outdir dist --target node --format esm --packages external && tsc --emitDeclarationOnly --outDir dist",
     "start": "node dist/server.js",
     "start:web": "bun run dist/web-server.js",
     "test": "bun test",
@@ -45,10 +45,8 @@
   },
   "devDependencies": {
     "@types/node": "^22.10.0",
-    "tsup": "^8.3.5",
     "tsx": "^4.19.0",
-    "typescript": "^5.7.2",
-    "vitest": "^2.1.8"
+    "typescript": "^5.7.2"
   },
   "engines": {
     "node": ">=18",
