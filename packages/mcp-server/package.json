@@ -1,5 +1,5 @@
 {
-  "name": "@termwright/mcp-server",
+  "name": "@techsavvyash/termwright-mcp",
   "version": "0.0.1",
   "description": "Playwright for terminals - MCP server for AI agents",
   "type": "module",

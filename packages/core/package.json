@@ -1,5 +1,5 @@
 {
-  "name": "@termwright/core",
+  "name": "@techsavvyash/termwright",
   "version": "0.0.1",
   "description": "Playwright for terminals - core library for programmatic terminal control",
   "type": "module",

@@ -5,11 +5,11 @@
   "type": "module",
   "description": "Examples for using Termwright",
   "scripts": {
-    "basic": "tsx basic.ts",
-    "interactive": "tsx interactive.ts",
-    "pattern-matching": "tsx pattern-matching.ts",
-    "multi-session": "tsx multi-session.ts",
-    "testing": "tsx testing-example.ts"
+    "getting-started:basic": "tsx getting-started/basic.ts",
+    "getting-started:interactive": "tsx getting-started/interactive.ts",
+    "advanced:pattern-matching": "tsx advanced/pattern-matching.ts",
+    "advanced:multi-session": "tsx advanced/multi-session.ts",
+    "testing:cli": "tsx testing/testing-example.ts"
   },
   "dependencies": {
     "@termwright/core": "*"
