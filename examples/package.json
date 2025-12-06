@@ -1,0 +1,20 @@
+{
+  "name": "termwright-examples",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "description": "Examples for using Termwright",
+  "scripts": {
+    "basic": "tsx basic.ts",
+    "interactive": "tsx interactive.ts",
+    "pattern-matching": "tsx pattern-matching.ts",
+    "multi-session": "tsx multi-session.ts",
+    "testing": "tsx testing-example.ts"
+  },
+  "dependencies": {
+    "@termwright/core": "*"
+  },
+  "devDependencies": {
+    "tsx": "^4.19.0"
+  }
+}
