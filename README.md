@@ -1,4 +1,4 @@
-# term-mcp
+# termwright
 
 Puppeteer for terminals. Programmatic terminal control for AI agents via MCP.
 
