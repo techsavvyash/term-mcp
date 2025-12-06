@@ -9,9 +9,9 @@ Spawn terminal sessions, send commands, read output, and control interactive pro
 ## Installation
 
 ```bash
-npm install term-mcp
+npm install termwright
 # or
-bun add term-mcp
+bun add termwright
 ```
 
 ## Quick Start
@@ -23,9 +23,9 @@ Add to your Claude config:
 ```json
 {
   "mcpServers": {
-    "term-mcp": {
+    "termwright": {
       "command": "npx",
-      "args": ["term-mcp"]
+      "args": ["termwright"]
     }
   }
 }
@@ -34,7 +34,7 @@ Add to your Claude config:
 ### Programmatic Usage
 
 ```typescript
-import { TerminalManager } from 'term-mcp';
+import { TerminalManager } from 'termwright';
 
 // Headless terminal
 const session = TerminalManager.spawn();
@@ -61,7 +61,7 @@ visible.write('echo hello\n');
 
 ## Visible Terminals
 
-With `visible: true`, term-mcp creates a tmux session and spawns a terminal emulator window attached to it. Both AI and user can see and interact with the same terminal.
+With `visible: true`, termwright creates a tmux session and spawns a terminal emulator window attached to it. Both AI and user can see and interact with the same terminal.
 
 Supported terminal emulators: kitty, alacritty, wezterm, foot, gnome-terminal, konsole, xterm.
 

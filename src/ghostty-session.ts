@@ -59,7 +59,7 @@ export class GhosttySession {
     this.backend = options.backend || "pty";
     this.theme = { ...DEFAULT_THEME, ...options.theme };
     this.fontSize = options.fontSize || 14;
-    this.title = options.title || `term-mcp: ${id}`;
+    this.title = options.title || `termwright: ${id}`;
     this.outputBuffer = new OutputBuffer();
 
     this.spawn(options);

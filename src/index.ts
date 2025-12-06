@@ -8,10 +8,10 @@ export { OutputBuffer } from "./output-buffer";
 export { GhosttyManager } from "./ghostty-manager";
 export { GhosttySession } from "./ghostty-session";
 
-// Note: TermMcpWebServer requires Bun runtime and is available via:
+// Note: TermwrightWebServer requires Bun runtime and is available via:
 // - Direct run: bun run src/web-server.ts
 // - Compiled: bun dist/web-server.js
-// - Import (in Bun only): import { TermMcpWebServer } from "term-mcp/dist/web-server"
+// - Import (in Bun only): import { TermwrightWebServer } from "termwright/dist/web-server"
 
 // Type exports
 export type {

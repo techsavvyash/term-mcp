@@ -1,7 +1,7 @@
 {
-  "name": "term-mcp",
+  "name": "termwright",
   "version": "0.2.0",
-  "description": "Puppeteer for terminals - programmatic terminal control for AI agents with libghostty integration",
+  "description": "Puppeteer for terminals - programmatic terminal control for AI agents",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -12,8 +12,8 @@
     }
   },
   "bin": {
-    "term-mcp": "./dist/server.js",
-    "term-mcp-web": "./dist/web-server.js"
+    "termwright": "./dist/server.js",
+    "termwright-web": "./dist/web-server.js"
   },
   "scripts": {
     "dev": "npx tsx src/server.ts",
@@ -21,7 +21,9 @@
     "build": "bun build src/index.ts src/server.ts src/web-server.ts --outdir dist --target node --format esm --packages external && tsc --emitDeclarationOnly --outDir dist",
     "start": "node dist/server.js",
     "start:web": "node dist/web-server.js",
-    "test": "bun test",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:unit": "vitest run src/output-buffer.test.ts",
     "typecheck": "tsc --noEmit"
   },
   "keywords": [
@@ -49,7 +51,8 @@
     "@types/node": "^22.10.0",
     "@types/ws": "^8.18.1",
     "tsx": "^4.19.0",
-    "typescript": "^5.7.2"
+    "typescript": "^5.7.2",
+    "vitest": "^4.0.15"
   },
   "engines": {
     "node": ">=18",

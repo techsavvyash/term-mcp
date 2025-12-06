@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Web server for term-mcp with ghostty-web integration.
+ * Web server for termwright with ghostty-web integration.
  * Provides browser-based terminal access with WebSocket communication.
  * Supports both Node.js and Bun runtimes.
  */
@@ -40,7 +40,7 @@ function getTerminalHtml(sessionId: string, wsUrl: string): string {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>term-mcp: ${sessionId}</title>
+  <title>termwright: ${sessionId}</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
@@ -72,7 +72,7 @@ function getTerminalHtml(sessionId: string, wsUrl: string): string {
 </head>
 <body>
   <div id="header">
-    <h1>term-mcp: ${sessionId}</h1>
+    <h1>termwright: ${sessionId}</h1>
     <div class="status">
       <span id="status-text">Loading...</span>
       <div id="status-dot" class="dot disconnected"></div>
@@ -208,7 +208,7 @@ function getIndexHtml(host: string, port: number): string {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>term-mcp Web Server</title>
+  <title>termwright Web Server</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
@@ -260,7 +260,7 @@ function getIndexHtml(host: string, port: number): string {
 </head>
 <body>
   <div class="container">
-    <h1>term-mcp</h1>
+    <h1>termwright</h1>
     <p class="subtitle">Puppeteer for terminals - Web Interface with ghostty-web</p>
 
     <div class="card">
@@ -324,7 +324,7 @@ function getIndexHtml(host: string, port: number): string {
 }
 
 // Main web server - Node.js implementation using http + ws
-export class TermMcpWebServer {
+export class TermwrightWebServer {
   private httpServer: HttpServer | null = null;
   private wss: WebSocketServer | null = null;
   private config: Required<WebServerConfig>;
@@ -555,7 +555,7 @@ export class TermMcpWebServer {
     });
 
     this.httpServer.listen(port, host, () => {
-      console.log(`term-mcp web server running at http://${host}:${port}`);
+      console.log(`termwright web server running at http://${host}:${port}`);
     });
   }
 
@@ -597,9 +597,9 @@ if (isMain) {
       i++;
     } else if (args[i] === "--help") {
       console.log(`
-term-mcp-web: Web server for terminal access with ghostty-web
+termwright-web: Web server for terminal access with ghostty-web
 
-Usage: term-mcp-web [options]
+Usage: termwright-web [options]
 
 Options:
   -p, --port <port>  Port to listen on (default: 3000)
@@ -607,15 +607,15 @@ Options:
   --help             Show this help message
 
 Examples:
-  term-mcp-web
-  term-mcp-web --port 8080
-  term-mcp-web --host 0.0.0.0 --port 3000
+  termwright-web
+  termwright-web --port 8080
+  termwright-web --host 0.0.0.0 --port 3000
 `);
       process.exit(0);
     }
   }
 
-  const server = new TermMcpWebServer({ port, host });
+  const server = new TermwrightWebServer({ port, host });
   server.start();
 
   // Handle graceful shutdown

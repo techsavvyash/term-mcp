@@ -1,4 +1,4 @@
-// Minimal Bun type declarations for term-mcp
+// Minimal Bun type declarations for termwright
 
 declare global {
   const Bun: {

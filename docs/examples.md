@@ -3,7 +3,7 @@
 ## Run a build and capture output
 
 ```typescript
-import { TerminalManager } from 'term-mcp';
+import { TerminalManager } from 'termwright';
 
 const session = TerminalManager.spawn({ cwd: '/path/to/project' });
 

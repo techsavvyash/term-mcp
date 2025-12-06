@@ -18,8 +18,8 @@ Create a new terminal session.
   "sessionId": "abc123",
   "cwd": "/home/user",
   "visible": true,
-  "tmuxSession": "term-mcp-abc123",
-  "attachCommand": "tmux attach -t term-mcp-abc123"
+  "tmuxSession": "termwright-abc123",
+  "attachCommand": "tmux attach -t termwright-abc123"
 }
 ```
 

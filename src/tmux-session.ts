@@ -79,7 +79,7 @@ export class TmuxSession {
 
   constructor(id: string, options: SpawnOptions = {}, spawnWindow: boolean = false) {
     this.id = id;
-    this.tmuxSessionName = `term-mcp-${id}`;
+    this.tmuxSessionName = `termwright-${id}`;
     this.createdAt = new Date();
     this.cwd = options.cwd || process.cwd();
     this.outputBuffer = new OutputBuffer();

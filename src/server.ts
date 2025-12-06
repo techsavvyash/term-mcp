@@ -16,8 +16,8 @@ let webServer: { start(): void; stop(): void; port: number; host: string } | nul
 async function createWebServer(config: WebServerConfig): Promise<typeof webServer> {
   try {
     // Dynamic import to avoid loading Bun-specific code in Node.js
-    const { TermMcpWebServer } = await import("./web-server");
-    return new TermMcpWebServer(config);
+    const { TermwrightWebServer } = await import("./web-server");
+    return new TermwrightWebServer(config);
   } catch (error) {
     throw new Error(
       "Web server requires Bun runtime. Please run with: bun run start:web\n" +
@@ -125,7 +125,7 @@ function stripAnsi(str: string): string {
 // Create MCP server
 const server = new Server(
   {
-    name: "term-mcp",
+    name: "termwright",
     version: "0.2.0",
   },
   {
@@ -972,7 +972,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 async function main() {
   const transport = new StdioServerTransport();
   await server.connect(transport);
-  console.error("term-mcp server running on stdio");
+  console.error("termwright server running on stdio");
 }
 
 main().catch(console.error);
