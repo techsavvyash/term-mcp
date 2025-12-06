@@ -4,83 +4,64 @@ Comprehensive documentation for Termwright - Playwright for terminals.
 
 ## 📚 Documentation Index
 
-### Getting Started
-- **[Quick Start](./quick-start.md)** - Get up and running in 5 minutes
-- **[Installation](./installation.md)** - Installation and setup guide
+### Core Documentation
+- **[API Reference](./api.md)** - Complete API documentation for programmatic usage
+- **[MCP Tools](./mcp-tools.md)** - MCP server tools reference for AI agents
 - **[Examples Guide](./examples.md)** - Complete guide to all examples
 
-### Core Concepts
-- **[API Reference](./api-reference.md)** - Complete API documentation
-- **[Pattern Matching](./pattern-matching.md)** - Advanced pattern matching guide
-- **[Session Management](./session-management.md)** - Managing terminal sessions
-
-### Advanced Topics
-- **[Testing Guide](./testing-guide.md)** - Automated testing strategies
-- **[Best Practices](./best-practices.md)** - Tips and recommendations
-- **[Troubleshooting](./troubleshooting.md)** - Common issues and solutions
-
-### MCP Integration
-- **[MCP Server](./mcp-server.md)** - Using with Model Context Protocol
-- **[AI Agents](./ai-agents.md)** - Building AI agents with Termwright
+### Example Code
+- **[Getting Started Examples](../examples/getting-started/)** - Basic terminal operations
+- **[Advanced Examples](../examples/advanced/)** - Pattern matching and multi-session
+- **[Testing Examples](../examples/testing/)** - CLI testing automation
 
 ## 🚀 Quick Links
 
 | I want to... | Go to... |
 |--------------|----------|
-| Learn the basics | [Quick Start](./quick-start.md) |
+| Use as a library | [API Reference](./api.md) |
+| Use with AI/MCP | [MCP Tools](./mcp-tools.md) |
 | See code examples | [Examples Guide](./examples.md) |
-| Look up a method | [API Reference](./api-reference.md) |
-| Test my CLI app | [Testing Guide](./testing-guide.md) |
-| Use with AI | [MCP Server](./mcp-server.md) |
-| Fix an issue | [Troubleshooting](./troubleshooting.md) |
+| Browse examples | [Examples Directory](../examples/) |
 
 ## 📖 Documentation Structure
 
 ```
 docs/
-├── README.md                  # This file
-├── quick-start.md            # 5-minute quick start
-├── installation.md           # Installation guide
-├── examples.md               # Examples index and guide
-├── api-reference.md          # Complete API documentation
-├── pattern-matching.md       # Pattern matching guide
-├── session-management.md     # Session lifecycle and management
-├── testing-guide.md          # Testing strategies
-├── best-practices.md         # Tips and recommendations
-├── troubleshooting.md        # Common issues
-├── mcp-server.md            # MCP integration
-└── ai-agents.md             # AI agent development
+├── README.md          # This file
+├── api.md            # API reference for library usage
+├── mcp-tools.md      # MCP tools reference for AI agents
+└── examples.md       # Examples guide and overview
+
+examples/
+├── getting-started/  # Basic examples
+├── advanced/         # Advanced patterns
+└── testing/         # Testing examples
 ```
 
 ## 🎯 Documentation by Role
 
-### For Developers
-1. [Quick Start](./quick-start.md)
-2. [API Reference](./api-reference.md)
-3. [Examples Guide](./examples.md)
-4. [Best Practices](./best-practices.md)
+### For Developers (Library Usage)
+1. [API Reference](./api.md)
+2. [Getting Started Examples](../examples/getting-started/)
+3. [Advanced Examples](../examples/advanced/)
 
-### For QA Engineers
-1. [Testing Guide](./testing-guide.md)
-2. [Examples - Testing](./examples.md#testing)
-3. [Pattern Matching](./pattern-matching.md)
-4. [Troubleshooting](./troubleshooting.md)
+### For QA Engineers (Testing)
+1. [Testing Examples](../examples/testing/)
+2. [API Reference](./api.md)
+3. [Advanced Examples](../examples/advanced/)
 
-### For AI/ML Engineers
-1. [MCP Server](./mcp-server.md)
-2. [AI Agents](./ai-agents.md)
-3. [API Reference](./api-reference.md)
-4. [Examples Guide](./examples.md)
+### For AI/ML Engineers (MCP Integration)
+1. [MCP Tools Reference](./mcp-tools.md)
+2. [Examples Guide](./examples.md)
+3. [Main README](../README.md)
 
-## 🔍 Search Documentation
+## 🔧 Key Features
 
-Looking for something specific?
-
-- **Commands**: [API Reference - Methods](./api-reference.md#methods)
-- **Patterns**: [Pattern Matching Guide](./pattern-matching.md)
-- **Errors**: [Troubleshooting](./troubleshooting.md)
-- **Examples**: [Examples Guide](./examples.md)
-- **Testing**: [Testing Guide](./testing-guide.md)
+- **Universal tmux-based terminals** - Works with any terminal emulator
+- **Headless and visible modes** - PTY for automation, tmux for visibility
+- **Pattern matching** - Wait for regex patterns in output
+- **Session management** - Spawn, control, and cleanup multiple sessions
+- **MCP integration** - Built-in Model Context Protocol server for AI agents
 
 ## 📝 Contributing to Documentation
 
@@ -89,8 +70,6 @@ Found an error or want to improve the docs?
 1. Fork the repository
 2. Edit the markdown files in `docs/`
 3. Submit a pull request
-
-See [CONTRIBUTING.md](../CONTRIBUTING.md) for details.
 
 ## 📄 License
 
