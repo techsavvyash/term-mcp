@@ -31,7 +31,7 @@
   "license": "MIT",
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.0.0",
-    "@termwright/core": "workspace:*",
+    "@termwright/core": "*",
     "ghostty-web": "^0.3.0",
     "ws": "^8.18.3",
     "zod": "^3.24.2"
@@ -43,6 +43,6 @@
     "typescript": "^5.7.2"
   },
   "engines": {
-    "node": ">=18"
+    "node": ">=20"
   }
 }

@@ -13,15 +13,10 @@ jobs:
 
     strategy:
       matrix:
-        node-version: [18, 20, 22]
+        node-version: [20, 22, 24]
 
     steps:
       - uses: actions/checkout@v4
-
-      - name: Setup Bun
-        uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: latest
 
       - name: Setup Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v4
@@ -29,13 +24,13 @@ jobs:
           node-version: ${{ matrix.node-version }}
 
       - name: Install dependencies
-        run: bun install
+        run: npm install
 
       - name: Typecheck core
-        run: bun run --filter @termwright/core typecheck
+        run: npm run typecheck --workspace=@termwright/core
 
       - name: Test core
-        run: bun run --filter @termwright/core test
+        run: npm run test --workspace=@termwright/core
 
   test-mcp-server:
     name: Test @termwright/mcp-server
@@ -45,24 +40,19 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup Bun
-        uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: latest
-
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
 
       - name: Install dependencies
-        run: bun install
+        run: npm install
 
       - name: Build core first (for types)
-        run: bun run --filter @termwright/core build
+        run: npm run build --workspace=@termwright/core
 
       - name: Typecheck mcp-server
-        run: bun run --filter @termwright/mcp-server typecheck
+        run: npm run typecheck --workspace=@termwright/mcp-server
 
   build:
     name: Build all packages
@@ -72,21 +62,16 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup Bun
-        uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: latest
-
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
 
       - name: Install dependencies
-        run: bun install
+        run: npm install
 
       - name: Build all packages
-        run: bun run build
+        run: npm run build
 
       - name: Verify core build artifacts
         run: |
