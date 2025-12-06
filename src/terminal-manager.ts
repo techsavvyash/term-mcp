@@ -20,6 +20,7 @@ export interface ITerminalSession {
   resize(cols: number, rows: number): void;
   kill(): void;
   destroy(): void;
+  openWindow?(): void;  // Only available for visible (tmux) sessions
 }
 
 /**
@@ -72,8 +73,8 @@ class TerminalManagerClass {
     let session: ITerminalSession;
 
     if (options.visible) {
-      // Create a visible tmux session
-      session = new TmuxSession(id, options);
+      // Create a visible tmux session and spawn terminal window
+      session = new TmuxSession(id, options, true);
     } else {
       // Create a headless PTY session
       session = new TerminalSession(`term-${id}`, options);

@@ -65,6 +65,10 @@ const CloseTerminalSchema = z.object({
   sessionId: z.string().describe("Terminal session ID to close"),
 });
 
+const OpenWindowSchema = z.object({
+  sessionId: z.string().describe("Terminal session ID to open window for"),
+});
+
 // Ghostty-specific schemas
 const GhosttySpawnSchema = z.object({
   backend: z.enum(["pty", "native", "web"]).optional().describe("Backend to use: 'pty' (headless), 'native' (Ghostty window), 'web' (browser)"),
@@ -233,6 +237,17 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
           type: "object",
           properties: {
             sessionId: { type: "string", description: "Terminal session ID to close" },
+          },
+          required: ["sessionId"],
+        },
+      },
+      {
+        name: "open-terminal-window",
+        description: "Open or reopen a terminal emulator window for a visible (tmux) session. Use this if the window was closed or failed to spawn.",
+        inputSchema: {
+          type: "object",
+          properties: {
+            sessionId: { type: "string", description: "Terminal session ID to open window for" },
           },
           required: ["sessionId"],
         },
@@ -580,6 +595,58 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
                   ? `Session ${parsed.sessionId} closed successfully`
                   : `Session ${parsed.sessionId} not found`,
                 sessionId: parsed.sessionId,
+              }),
+            },
+          ],
+        };
+      }
+
+      case "open-terminal-window": {
+        const parsed = OpenWindowSchema.parse(args);
+        const session = TerminalManager.getOrThrow(parsed.sessionId);
+        const info = session.getInfo();
+
+        if (!info.visible) {
+          return {
+            content: [
+              {
+                type: "text",
+                text: JSON.stringify({
+                  success: false,
+                  message: `Session ${parsed.sessionId} is not a visible (tmux) session`,
+                  sessionId: parsed.sessionId,
+                }),
+              },
+            ],
+          };
+        }
+
+        if (!session.openWindow) {
+          return {
+            content: [
+              {
+                type: "text",
+                text: JSON.stringify({
+                  success: false,
+                  message: `Session ${parsed.sessionId} does not support opening windows`,
+                  sessionId: parsed.sessionId,
+                }),
+              },
+            ],
+          };
+        }
+
+        session.openWindow();
+
+        return {
+          content: [
+            {
+              type: "text",
+              text: JSON.stringify({
+                success: true,
+                message: `Terminal window opened for session ${parsed.sessionId}`,
+                sessionId: parsed.sessionId,
+                attachCommand: info.attachCommand,
               }),
             },
           ],

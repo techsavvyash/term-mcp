@@ -1,13 +1,39 @@
-#!/usr/bin/env bun
+#!/usr/bin/env node
 /**
  * Web server for term-mcp with ghostty-web integration.
  * Provides browser-based terminal access with WebSocket communication.
+ * Supports both Node.js and Bun runtimes.
  */
 
 import { GhosttyManager } from "./ghostty-manager";
 import type { WebServerConfig, GhosttySpawnOptions } from "./types";
+import { readFileSync } from "fs";
+import { join, dirname } from "path";
+import { fileURLToPath } from "url";
+import { createServer, type IncomingMessage, type ServerResponse, type Server as HttpServer } from "http";
+import { WebSocketServer, WebSocket as WsWebSocket } from "ws";
 
-// HTML template for terminal page
+// Get the path to ghostty-web assets
+function getGhosttyWebPath(): string {
+  const possiblePaths = [
+    join(process.cwd(), "node_modules", "ghostty-web"),
+    join(dirname(fileURLToPath(import.meta.url)), "..", "node_modules", "ghostty-web"),
+  ];
+
+  for (const p of possiblePaths) {
+    try {
+      const { statSync } = require("fs");
+      statSync(join(p, "dist", "ghostty-web.js"));
+      return p;
+    } catch {
+      continue;
+    }
+  }
+
+  return join(process.cwd(), "node_modules", "ghostty-web");
+}
+
+// HTML template for terminal page using ghostty-web
 function getTerminalHtml(sessionId: string, wsUrl: string): string {
   return `<!DOCTYPE html>
 <html lang="en">
@@ -16,11 +42,7 @@ function getTerminalHtml(sessionId: string, wsUrl: string): string {
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>term-mcp: ${sessionId}</title>
   <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
       background: #1a1b26;
       color: #a9b1d6;
@@ -28,6 +50,7 @@ function getTerminalHtml(sessionId: string, wsUrl: string): string {
       height: 100vh;
       display: flex;
       flex-direction: column;
+      overflow: hidden;
     }
     #header {
       background: #16161e;
@@ -36,97 +59,107 @@ function getTerminalHtml(sessionId: string, wsUrl: string): string {
       justify-content: space-between;
       align-items: center;
       border-bottom: 1px solid #33467c;
+      flex-shrink: 0;
     }
-    #header h1 {
-      font-size: 14px;
-      font-weight: 500;
-      color: #7aa2f7;
-    }
-    #header .status {
-      font-size: 12px;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-    #header .status .dot {
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      background: #9ece6a;
-    }
-    #header .status .dot.disconnected {
-      background: #f7768e;
-    }
-    #terminal-container {
-      flex: 1;
-      padding: 8px;
-      overflow: hidden;
-    }
-    #terminal {
-      width: 100%;
-      height: 100%;
-      background: #1a1b26;
-      color: #a9b1d6;
-      font-size: 14px;
-      line-height: 1.4;
-      padding: 8px;
-      overflow-y: auto;
-      white-space: pre-wrap;
-      word-wrap: break-word;
-    }
-    #input-container {
-      background: #16161e;
-      padding: 8px 16px;
-      border-top: 1px solid #33467c;
-    }
-    #input {
-      width: 100%;
-      background: #1a1b26;
-      border: 1px solid #33467c;
-      color: #a9b1d6;
-      padding: 8px 12px;
-      font-family: inherit;
-      font-size: 14px;
-      border-radius: 4px;
-      outline: none;
-    }
-    #input:focus {
-      border-color: #7aa2f7;
-    }
-    .ansi-bright-black { color: #414868; }
-    .ansi-red { color: #f7768e; }
-    .ansi-green { color: #9ece6a; }
-    .ansi-yellow { color: #e0af68; }
-    .ansi-blue { color: #7aa2f7; }
-    .ansi-magenta { color: #bb9af7; }
-    .ansi-cyan { color: #7dcfff; }
-    .ansi-white { color: #c0caf5; }
+    #header h1 { font-size: 14px; font-weight: 500; color: #7aa2f7; }
+    #header .status { font-size: 12px; display: flex; align-items: center; gap: 8px; }
+    #header .status .dot { width: 8px; height: 8px; border-radius: 50%; background: #9ece6a; }
+    #header .status .dot.disconnected { background: #f7768e; }
+    #terminal-container { flex: 1; overflow: hidden; position: relative; }
+    #terminal { width: 100%; height: 100%; }
+    #loading { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: #7aa2f7; font-size: 16px; }
   </style>
 </head>
 <body>
   <div id="header">
-    <h1>🖥️ term-mcp: ${sessionId}</h1>
+    <h1>term-mcp: ${sessionId}</h1>
     <div class="status">
-      <span id="status-text">Connecting...</span>
+      <span id="status-text">Loading...</span>
       <div id="status-dot" class="dot disconnected"></div>
     </div>
   </div>
   <div id="terminal-container">
+    <div id="loading">Initializing terminal...</div>
     <div id="terminal"></div>
   </div>
-  <div id="input-container">
-    <input type="text" id="input" placeholder="Type command and press Enter..." autofocus />
-  </div>
 
-  <script>
-    const terminal = document.getElementById('terminal');
-    const input = document.getElementById('input');
+  <script type="module">
+    import { init, Terminal, FitAddon } from '/ghostty-web/ghostty-web.js';
+
     const statusText = document.getElementById('status-text');
     const statusDot = document.getElementById('status-dot');
+    const loadingEl = document.getElementById('loading');
+    const terminalContainer = document.getElementById('terminal');
 
     let ws = null;
+    let term = null;
+    let fitAddon = null;
     let reconnectAttempts = 0;
     const maxReconnectAttempts = 5;
+
+    async function initTerminal() {
+      try {
+        await init('/ghostty-web/ghostty-vt.wasm');
+
+        term = new Terminal({
+          cursorBlink: true,
+          fontSize: 14,
+          fontFamily: "'JetBrains Mono', 'Fira Code', 'Consolas', monospace",
+          theme: {
+            background: '#1a1b26',
+            foreground: '#a9b1d6',
+            cursor: '#c0caf5',
+            selectionBackground: '#33467c',
+            black: '#15161e',
+            red: '#f7768e',
+            green: '#9ece6a',
+            yellow: '#e0af68',
+            blue: '#7aa2f7',
+            magenta: '#bb9af7',
+            cyan: '#7dcfff',
+            white: '#c0caf5',
+            brightBlack: '#414868',
+            brightRed: '#f7768e',
+            brightGreen: '#9ece6a',
+            brightYellow: '#e0af68',
+            brightBlue: '#7aa2f7',
+            brightMagenta: '#bb9af7',
+            brightCyan: '#7dcfff',
+            brightWhite: '#c0caf5',
+          },
+        });
+
+        fitAddon = new FitAddon();
+        term.loadAddon(fitAddon);
+        term.open(terminalContainer);
+        fitAddon.fit();
+
+        loadingEl.style.display = 'none';
+
+        term.onData((data) => {
+          if (ws && ws.readyState === WebSocket.OPEN) {
+            ws.send(JSON.stringify({ type: 'input', data }));
+          }
+        });
+
+        term.onResize(({ cols, rows }) => {
+          if (ws && ws.readyState === WebSocket.OPEN) {
+            ws.send(JSON.stringify({ type: 'resize', cols, rows }));
+          }
+        });
+
+        connect();
+
+        window.addEventListener('resize', () => {
+          if (fitAddon) fitAddon.fit();
+        });
+
+      } catch (error) {
+        console.error('Failed to initialize terminal:', error);
+        loadingEl.textContent = 'Failed to initialize terminal: ' + error.message;
+        loadingEl.style.color = '#f7768e';
+      }
+    }
 
     function connect() {
       ws = new WebSocket('${wsUrl}');
@@ -135,11 +168,17 @@ function getTerminalHtml(sessionId: string, wsUrl: string): string {
         statusText.textContent = 'Connected';
         statusDot.classList.remove('disconnected');
         reconnectAttempts = 0;
+
+        if (term && fitAddon) {
+          const dims = fitAddon.proposeDimensions();
+          if (dims) {
+            ws.send(JSON.stringify({ type: 'resize', cols: dims.cols, rows: dims.rows }));
+          }
+        }
       };
 
       ws.onmessage = (event) => {
-        // Parse and render terminal output
-        appendOutput(event.data);
+        if (term) term.write(event.data);
       };
 
       ws.onclose = () => {
@@ -153,43 +192,10 @@ function getTerminalHtml(sessionId: string, wsUrl: string): string {
         }
       };
 
-      ws.onerror = (error) => {
-        console.error('WebSocket error:', error);
-      };
+      ws.onerror = (error) => console.error('WebSocket error:', error);
     }
 
-    function appendOutput(data) {
-      // Simple ANSI code stripping for display (ghostty-web would handle this properly)
-      const cleaned = data
-        .replace(/\\x1b\\[[0-9;]*[a-zA-Z]/g, '')
-        .replace(/\\x1b\\][^\\x07]*\\x07/g, '');
-
-      terminal.textContent += data;
-      terminal.scrollTop = terminal.scrollHeight;
-    }
-
-    function sendInput(data) {
-      if (ws && ws.readyState === WebSocket.OPEN) {
-        ws.send(JSON.stringify({ type: 'input', data }));
-      }
-    }
-
-    input.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') {
-        sendInput(input.value + '\\n');
-        input.value = '';
-      } else if (e.key === 'Tab') {
-        e.preventDefault();
-        sendInput('\\t');
-      } else if (e.ctrlKey && e.key === 'c') {
-        sendInput('\\x03');
-      } else if (e.ctrlKey && e.key === 'd') {
-        sendInput('\\x04');
-      }
-    });
-
-    // Start connection
-    connect();
+    initTerminal();
   </script>
 </body>
 </html>`;
@@ -213,15 +219,8 @@ function getIndexHtml(host: string, port: number): string {
       padding: 40px;
     }
     .container { max-width: 800px; margin: 0 auto; }
-    h1 {
-      font-size: 2rem;
-      margin-bottom: 8px;
-      color: #7aa2f7;
-    }
-    .subtitle {
-      color: #565f89;
-      margin-bottom: 32px;
-    }
+    h1 { font-size: 2rem; margin-bottom: 8px; color: #7aa2f7; }
+    .subtitle { color: #565f89; margin-bottom: 32px; }
     .card {
       background: #16161e;
       border: 1px solid #33467c;
@@ -229,14 +228,8 @@ function getIndexHtml(host: string, port: number): string {
       padding: 24px;
       margin-bottom: 24px;
     }
-    .card h2 {
-      font-size: 1.25rem;
-      margin-bottom: 16px;
-      color: #bb9af7;
-    }
-    .sessions-list {
-      list-style: none;
-    }
+    .card h2 { font-size: 1.25rem; margin-bottom: 16px; color: #bb9af7; }
+    .sessions-list { list-style: none; }
     .sessions-list li {
       padding: 12px 16px;
       background: #1a1b26;
@@ -247,12 +240,7 @@ function getIndexHtml(host: string, port: number): string {
       align-items: center;
     }
     .sessions-list .id { color: #9ece6a; font-family: monospace; }
-    .sessions-list .backend {
-      font-size: 12px;
-      padding: 2px 8px;
-      background: #33467c;
-      border-radius: 4px;
-    }
+    .sessions-list .backend { font-size: 12px; padding: 2px 8px; background: #33467c; border-radius: 4px; }
     button {
       background: #7aa2f7;
       color: #1a1b26;
@@ -264,24 +252,16 @@ function getIndexHtml(host: string, port: number): string {
       font-weight: 500;
     }
     button:hover { background: #89b4fa; }
-    .empty {
-      color: #565f89;
-      font-style: italic;
-    }
+    .empty { color: #565f89; font-style: italic; }
     a { color: #7aa2f7; text-decoration: none; }
     a:hover { text-decoration: underline; }
-    code {
-      background: #1a1b26;
-      padding: 2px 6px;
-      border-radius: 4px;
-      font-family: 'JetBrains Mono', monospace;
-    }
+    code { background: #1a1b26; padding: 2px 6px; border-radius: 4px; font-family: 'JetBrains Mono', monospace; }
   </style>
 </head>
 <body>
   <div class="container">
-    <h1>🖥️ term-mcp</h1>
-    <p class="subtitle">Puppeteer for terminals - Web Interface</p>
+    <h1>term-mcp</h1>
+    <p class="subtitle">Puppeteer for terminals - Web Interface with ghostty-web</p>
 
     <div class="card">
       <h2>Active Sessions</h2>
@@ -343,11 +323,10 @@ function getIndexHtml(host: string, port: number): string {
 </html>`;
 }
 
-/// <reference path="./bun.d.ts" />
-
-// Main web server
+// Main web server - Node.js implementation using http + ws
 export class TermMcpWebServer {
-  private server: BunServer | null = null;
+  private httpServer: HttpServer | null = null;
+  private wss: WebSocketServer | null = null;
   private config: Required<WebServerConfig>;
 
   constructor(config: WebServerConfig = {}) {
@@ -357,175 +336,237 @@ export class TermMcpWebServer {
       cors: config.cors ?? true,
     };
 
-    // Configure GhosttyManager with web server details
     GhosttyManager.configureWebServer(this.config.host, this.config.port);
   }
 
-  start(): void {
-    const { port, host, cors } = this.config;
-
-    // CORS headers helper
-    const getCorsHeaders = (): Record<string, string> =>
-      cors
-        ? {
-            "Access-Control-Allow-Origin": "*",
-            "Access-Control-Allow-Methods": "GET, POST, DELETE, OPTIONS",
-            "Access-Control-Allow-Headers": "Content-Type",
-          }
-        : {};
-
-    this.server = Bun.serve({
-      port,
-      hostname: host,
-
-      fetch: async (req: Request, server: BunServer): Promise<Response | undefined> => {
-        const url = new URL(req.url);
-        const path = url.pathname;
-        const corsHeaders = getCorsHeaders();
-
-        // Handle OPTIONS for CORS
-        if (req.method === "OPTIONS") {
-          return new Response(null, { headers: corsHeaders });
+  private getCorsHeaders(): Record<string, string> {
+    return this.config.cors
+      ? {
+          "Access-Control-Allow-Origin": "*",
+          "Access-Control-Allow-Methods": "GET, POST, DELETE, OPTIONS",
+          "Access-Control-Allow-Headers": "Content-Type",
         }
+      : {};
+  }
 
-        // WebSocket upgrade for terminal connections
-        if (path.startsWith("/ws/")) {
-          const sessionId = path.slice(4);
-          const session = GhosttyManager.get(sessionId);
+  private async handleRequest(req: IncomingMessage, res: ServerResponse): Promise<void> {
+    const url = new URL(req.url || "/", `http://${req.headers.host}`);
+    const path = url.pathname;
+    const method = req.method || "GET";
+    const corsHeaders = this.getCorsHeaders();
 
-          if (!session) {
-            return new Response("Session not found", { status: 404 });
-          }
+    // Set CORS headers
+    for (const [key, value] of Object.entries(corsHeaders)) {
+      res.setHeader(key, value);
+    }
 
-          const upgraded = server.upgrade(req, { data: { sessionId } });
-          if (upgraded) {
-            return undefined;
-          }
-          return new Response("WebSocket upgrade failed", { status: 500 });
-        }
+    // Handle OPTIONS for CORS
+    if (method === "OPTIONS") {
+      res.writeHead(204);
+      res.end();
+      return;
+    }
 
-        // API routes
-        if (path === "/api/sessions" && req.method === "GET") {
-          const sessions = GhosttyManager.list();
-          return Response.json({ sessions }, { headers: corsHeaders });
-        }
+    // API routes
+    if (path === "/api/sessions" && method === "GET") {
+      const sessions = GhosttyManager.list();
+      res.writeHead(200, { "Content-Type": "application/json" });
+      res.end(JSON.stringify({ sessions }));
+      return;
+    }
 
-        if (path === "/api/sessions" && req.method === "POST") {
-          const body = (await req.json()) as GhosttySpawnOptions;
+    if (path === "/api/sessions" && method === "POST") {
+      let body = "";
+      req.on("data", (chunk) => (body += chunk));
+      req.on("end", async () => {
+        try {
+          const parsed = JSON.parse(body) as GhosttySpawnOptions;
           const options: GhosttySpawnOptions = {
-            backend: body.backend || "web",
-            shell: body.shell,
-            cwd: body.cwd,
-            env: body.env,
-            cols: body.cols,
-            rows: body.rows,
-            title: body.title,
-            fontSize: body.fontSize,
-            theme: body.theme,
+            backend: parsed.backend || "web",
+            shell: parsed.shell,
+            cwd: parsed.cwd,
+            env: parsed.env,
+            cols: parsed.cols,
+            rows: parsed.rows,
+            title: parsed.title,
+            fontSize: parsed.fontSize,
+            theme: parsed.theme,
           };
 
           const session = GhosttyManager.spawn(options);
-
-          // Wait for shell to initialize
           await new Promise((resolve) => setTimeout(resolve, 200));
 
-          return Response.json(
-            {
+          res.writeHead(200, { "Content-Type": "application/json" });
+          res.end(
+            JSON.stringify({
               sessionId: session.id,
               pid: session.pid,
               cwd: session.cwd,
               backend: session.backend,
               webUrl: session.webUrl,
               windowId: session.windowId,
-            },
-            { headers: corsHeaders }
+            })
           );
+        } catch (error) {
+          res.writeHead(400, { "Content-Type": "application/json" });
+          res.end(JSON.stringify({ error: "Invalid request body" }));
+        }
+      });
+      return;
+    }
+
+    if (path.startsWith("/api/sessions/") && method === "DELETE") {
+      const sessionId = path.slice(14);
+      const destroyed = GhosttyManager.destroy(sessionId);
+      res.writeHead(200, { "Content-Type": "application/json" });
+      res.end(JSON.stringify({ success: destroyed }));
+      return;
+    }
+
+    if (path === "/api/backends" && method === "GET") {
+      const backends = GhosttyManager.getAvailableBackends();
+      res.writeHead(200, { "Content-Type": "application/json" });
+      res.end(JSON.stringify({ backends }));
+      return;
+    }
+
+    // Serve ghostty-web static assets
+    if (path.startsWith("/ghostty-web/")) {
+      const filename = path.slice(13);
+      const ghosttyPath = getGhosttyWebPath();
+
+      try {
+        let filePath: string;
+        let contentType: string;
+
+        if (filename === "ghostty-web.js") {
+          filePath = join(ghosttyPath, "dist", "ghostty-web.js");
+          contentType = "application/javascript";
+        } else if (filename === "ghostty-vt.wasm") {
+          filePath = join(ghosttyPath, "ghostty-vt.wasm");
+          contentType = "application/wasm";
+        } else {
+          res.writeHead(404);
+          res.end("Not found");
+          return;
         }
 
-        if (path.startsWith("/api/sessions/") && req.method === "DELETE") {
-          const sessionId = path.slice(14);
-          const destroyed = GhosttyManager.destroy(sessionId);
-          return Response.json({ success: destroyed }, { headers: corsHeaders });
-        }
+        const content = readFileSync(filePath);
+        res.writeHead(200, { "Content-Type": contentType });
+        res.end(content);
+      } catch (error) {
+        console.error(`Failed to serve ${filename}:`, error);
+        res.writeHead(500);
+        res.end("Failed to load ghostty-web assets");
+      }
+      return;
+    }
 
-        if (path === "/api/backends" && req.method === "GET") {
-          const backends = GhosttyManager.getAvailableBackends();
-          return Response.json({ backends }, { headers: corsHeaders });
-        }
+    // Terminal page
+    if (path.startsWith("/terminal/")) {
+      const sessionId = path.slice(10);
+      const session = GhosttyManager.get(sessionId);
 
-        // Terminal page
-        if (path.startsWith("/terminal/")) {
-          const sessionId = path.slice(10);
-          const session = GhosttyManager.get(sessionId);
+      if (!session) {
+        res.writeHead(404);
+        res.end("Session not found");
+        return;
+      }
 
-          if (!session) {
-            return new Response("Session not found", { status: 404 });
-          }
+      const { host, port } = this.config;
+      const wsProtocol = host === "localhost" ? "ws" : "wss";
+      const wsUrl = `${wsProtocol}://${host}:${port}/ws/${sessionId}`;
+      const html = getTerminalHtml(sessionId, wsUrl);
 
-          const wsProtocol = host === "localhost" ? "ws" : "wss";
-          const wsUrl = `${wsProtocol}://${host}:${port}/ws/${sessionId}`;
-          const html = getTerminalHtml(sessionId, wsUrl);
+      res.writeHead(200, { "Content-Type": "text/html" });
+      res.end(html);
+      return;
+    }
 
-          return new Response(html, {
-            headers: { "Content-Type": "text/html", ...corsHeaders },
-          });
-        }
+    // Index page
+    if (path === "/" || path === "/index.html") {
+      const html = getIndexHtml(this.config.host, this.config.port);
+      res.writeHead(200, { "Content-Type": "text/html" });
+      res.end(html);
+      return;
+    }
 
-        // Index page
-        if (path === "/" || path === "/index.html") {
-          const html = getIndexHtml(host, port);
-          return new Response(html, {
-            headers: { "Content-Type": "text/html", ...corsHeaders },
-          });
-        }
+    res.writeHead(404);
+    res.end("Not found");
+  }
 
-        return new Response("Not found", { status: 404 });
-      },
+  start(): void {
+    const { port, host } = this.config;
 
-      websocket: {
-        open(ws: ServerWebSocket) {
-          const { sessionId } = ws.data as { sessionId: string };
-          const session = GhosttyManager.get(sessionId);
-          if (session) {
-            session.addWsConnection(ws as unknown as WebSocket);
-          }
-        },
-
-        message(ws: ServerWebSocket, message: string | Buffer) {
-          const { sessionId } = ws.data as { sessionId: string };
-          const session = GhosttyManager.get(sessionId);
-          if (!session) return;
-
-          try {
-            const data = JSON.parse(message.toString());
-            if (data.type === "input") {
-              session.write(data.data);
-            } else if (data.type === "resize") {
-              session.resize(data.cols, data.rows);
-            }
-          } catch {
-            // If not JSON, treat as raw input
-            session.write(message.toString());
-          }
-        },
-
-        close(ws: ServerWebSocket) {
-          const { sessionId } = ws.data as { sessionId: string };
-          const session = GhosttyManager.get(sessionId);
-          if (session) {
-            session.removeWsConnection(ws as unknown as WebSocket);
-          }
-        },
-      },
+    // Create HTTP server
+    this.httpServer = createServer((req, res) => {
+      this.handleRequest(req, res).catch((error) => {
+        console.error("Request error:", error);
+        res.writeHead(500);
+        res.end("Internal server error");
+      });
     });
 
-    console.log(`term-mcp web server running at http://${host}:${port}`);
+    // Create WebSocket server
+    this.wss = new WebSocketServer({ server: this.httpServer });
+
+    this.wss.on("connection", (ws: WsWebSocket, req: IncomingMessage) => {
+      const url = new URL(req.url || "/", `http://${req.headers.host}`);
+      const path = url.pathname;
+
+      if (!path.startsWith("/ws/")) {
+        ws.close(1008, "Invalid path");
+        return;
+      }
+
+      const sessionId = path.slice(4);
+      const session = GhosttyManager.get(sessionId);
+
+      if (!session) {
+        ws.close(1008, "Session not found");
+        return;
+      }
+
+      // Add WebSocket connection to session
+      session.addWsConnection(ws as unknown as WebSocket);
+
+      ws.on("message", (message: Buffer | string) => {
+        try {
+          const data = JSON.parse(message.toString());
+          if (data.type === "input") {
+            session.write(data.data);
+          } else if (data.type === "resize") {
+            session.resize(data.cols, data.rows);
+          }
+        } catch {
+          // If not JSON, treat as raw input
+          session.write(message.toString());
+        }
+      });
+
+      ws.on("close", () => {
+        session.removeWsConnection(ws as unknown as WebSocket);
+      });
+
+      ws.on("error", (error) => {
+        console.error("WebSocket error:", error);
+        session.removeWsConnection(ws as unknown as WebSocket);
+      });
+    });
+
+    this.httpServer.listen(port, host, () => {
+      console.log(`term-mcp web server running at http://${host}:${port}`);
+    });
   }
 
   stop(): void {
-    if (this.server) {
-      this.server.stop();
-      this.server = null;
+    if (this.wss) {
+      this.wss.close();
+      this.wss = null;
+    }
+    if (this.httpServer) {
+      this.httpServer.close();
+      this.httpServer = null;
     }
     GhosttyManager.destroyAll();
   }
@@ -540,7 +581,9 @@ export class TermMcpWebServer {
 }
 
 // CLI entry point
-if (import.meta.main) {
+const isMain = process.argv[1]?.includes("web-server") || import.meta.url.endsWith(process.argv[1] || "");
+
+if (isMain) {
   const args = process.argv.slice(2);
   let port = 3000;
   let host = "localhost";
@@ -554,7 +597,7 @@ if (import.meta.main) {
       i++;
     } else if (args[i] === "--help") {
       console.log(`
-term-mcp-web: Web server for terminal access
+term-mcp-web: Web server for terminal access with ghostty-web
 
 Usage: term-mcp-web [options]
 

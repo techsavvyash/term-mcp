@@ -124,7 +124,7 @@ export class TmuxSession {
 
       // Spawn terminal window if requested
       if (spawnWindow) {
-        this.spawnTerminalWindow();
+        this.openWindow();
       }
 
       // Start polling for output
@@ -138,8 +138,9 @@ export class TmuxSession {
 
   /**
    * Spawn a terminal emulator window attached to this tmux session.
+   * Can be called multiple times to reopen a closed window.
    */
-  private spawnTerminalWindow(): void {
+  openWindow(): void {
     const terminal = detectTerminalEmulator();
     if (!terminal) {
       throw new Error(
@@ -150,15 +151,21 @@ export class TmuxSession {
 
     this._terminalEmulator = terminal.name;
     const args = terminal.command(this.tmuxSessionName);
-    const [cmd, ...cmdArgs] = args;
 
-    // Spawn the terminal emulator as a detached process
-    this.terminalProcess = spawn(cmd, cmdArgs, {
+    // Build the command string for bash to execute
+    const cmdString = args.map(arg =>
+      arg.includes(' ') ? `"${arg}"` : arg
+    ).join(' ');
+
+    // Spawn via bash with background to ensure GUI apps work correctly
+    // Direct spawn with detached: true doesn't work reliably for GUI apps
+    this.terminalProcess = spawn('/bin/bash', ['-c', `${cmdString} &`], {
       detached: true,
       stdio: "ignore",
+      env: { ...process.env },
     });
 
-    // Don't let the terminal process keep the parent alive
+    // Don't let the bash process keep the parent alive
     this.terminalProcess.unref();
 
     // Track if terminal window is closed

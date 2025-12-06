@@ -17,10 +17,10 @@
   },
   "scripts": {
     "dev": "npx tsx src/server.ts",
-    "dev:web": "bun run src/web-server.ts",
+    "dev:web": "npx tsx src/web-server.ts",
     "build": "bun build src/index.ts src/server.ts src/web-server.ts --outdir dist --target node --format esm --packages external && tsc --emitDeclarationOnly --outDir dist",
     "start": "node dist/server.js",
-    "start:web": "bun run dist/web-server.js",
+    "start:web": "node dist/web-server.js",
     "test": "bun test",
     "typecheck": "tsc --noEmit"
   },
@@ -39,12 +39,15 @@
   "license": "MIT",
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.0.0",
+    "ghostty-web": "^0.3.0",
     "nanoid": "^5.0.9",
     "node-pty": "^1.0.0",
+    "ws": "^8.18.3",
     "zod": "^3.24.2"
   },
   "devDependencies": {
     "@types/node": "^22.10.0",
+    "@types/ws": "^8.18.1",
     "tsx": "^4.19.0",
     "typescript": "^5.7.2"
   },
